@@ -1,0 +1,28 @@
+*.log
+*~
+
+# root compiled macros
+*_C.d
+*_C.so
+
+# Compiled Object files
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Compiled programs
+*.exe
+
+*#
+
+# python
+*.pyc
+*__init__.py

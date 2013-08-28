@@ -11,7 +11,10 @@ void FitZPeak(const bool& doVoigtianFit, const bool& doCrystalBallFit,
               TH1F* histo,
               const std::string& EBEE)
 {
-  std::cout << ">>>>>>FitZPeak::Fitting histogram " << histo->GetName() << " with integral " << histo->Integral() << std::endl;
+  std::cout << ">>>>>>FitZPeak::Fitting histogram " << histo->GetName()
+            << " with integral " << histo->Integral()
+            << " and entries "   << histo->GetEntries()
+            << std::endl;
   
   //-------------
   // gaussian fit

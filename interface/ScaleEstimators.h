@@ -11,10 +11,20 @@
 
 #include "TH1F.h"
 #include "TF1.h"
+#include "TVirtualFitter.h"
 
 
 
 void FindSmallestInterval(double& mean, double& meanErr, double& min, double& max,
+                          std::vector<double>& vals,
+                          const double& fraction, const bool& verbosity = false);
+
+void FindSmallestInterval(double& mean, double& meanErr, double& min, double& max,
+                          TH1F* histo,
+                          const double& fraction, const bool& verbosity = false);
+
+void FindSmallestInterval(double& mean, double& meanErr, double& min, double& max,
+                          const double& startMin, const double& startMax, const double& precision,
                           std::vector<double>& vals, std::vector<double>& weights,
                           const double& fraction, const bool& verbosity = false);
 

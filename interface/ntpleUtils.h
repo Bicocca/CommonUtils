@@ -66,14 +66,23 @@ double DoKolmogorovTest(std::vector<double>& v1, std::vector<double>& v2);
 
 
 /** Set binning of an histogram */
+//template <class T>
+//void MySetBins(T* h, std::vector<double>& bins)
+//{
+//  double* binEdges = new double[bins.size()];
+//  for(unsigned int i = 0; i < bins.size(); ++i)
+//    binEdges[i] = bins.at(i);
+//  
+//  h -> SetBins(int(bins.size()-1),binEdges);
+//}
+
 template <class T>
 void MySetBins(T* h, std::vector<double>& bins)
 {
-  double* binEdges = new double[bins.size()];
-  for(unsigned int i = 0; i < bins.size(); ++i)
-    binEdges[i] = bins.at(i);
-  
-  h -> SetBins(bins.size()-1,binEdges);
+  for(unsigned int i = 0; i < bins.size()-1; ++i)
+  {
+    h -> SetBins(i+1,bins.at(i),bins.at(i+1));
+  }
 }
 
 /** Find bin number given bin edges */
@@ -241,11 +250,6 @@ int GetMatching(const std::vector<T1>& collection1, //---- RECO
 
 
 
-
-
-
-/** get electron flag/severity level */
-bool GetElectronFlag(const std::string& flag);
-bool GetElectronSeverityLevel(const std::string& SeverityLevel);
+std::string getPeriodLabel(int runId, bool runDepFlag, int runMin, int runMax);
 
 #endif

@@ -221,3 +221,33 @@ double MyEval(TGraph* g, const double& x)
   
   return 1.;
 }
+
+
+
+
+
+
+std::string getPeriodLabel(int runId, bool runDepFlag, int runMin, int runMax)
+{
+  if( runMin != 0 && runMax != 999999 ) return Form("%d-%d",runMin,runMax);
+  
+  // non run-dependent MC
+  if( !runDepFlag && runMin == 0 && runMax == 999999 ) return "allRange";
+  
+  // run-dependent MC
+  if( runDepFlag && runMin == 0 && runMax == 999999 && runId >= 190456 && runId <= 208686)
+  {
+    int runMinAB = 190456;
+    int runMaxAB = 198115;
+    int runMinC  = 198116;
+    int runMaxC  = 203742;
+    int runMinD  = 203777;
+    int runMaxD  = 208686;
+    
+    if( runId >= runMinAB && runId <= runMaxAB ) return "Run2012AB";
+    if( runId >= runMinC  && runId <= runMaxC  ) return "Run2012C";
+    if( runId >= runMinD  && runId <= runMaxD  ) return "Run2012D";
+  }
+
+  return "undefined";
+}

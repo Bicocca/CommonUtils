@@ -3,7 +3,7 @@
 // A class representing the configuration of the analysis program,
 // gathered from the configuration file and the command line
 //
-// last change : $Date: 2010/06/02 09:32:37 $
+// last change : $Date: 2013/06/10 12:17:52 $
 // by          : $Author: abenagli $
 //
 

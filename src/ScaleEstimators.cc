@@ -3,7 +3,7 @@
 
 
 void FindSmallestInterval(double& mean, double& meanErr, double& min, double& max,
-                          std::vector<double>& vals, std::vector<double>& weights,
+                          std::vector<double>& vals,
                           const double& fraction, const bool& verbosity)
 {
   if( verbosity )
@@ -11,8 +11,6 @@ void FindSmallestInterval(double& mean, double& meanErr, double& min, double& ma
   
   
   std::sort(vals.begin(),vals.end());
-  double lowEdge = vals.at(0) - 0.01*(vals.at(vals.size()-1)-vals.at(0));
-  double higEdge = vals.at(vals.size()-1) + 0.01*(vals.at(vals.size()-1)-vals.at(0));;
   
   unsigned int nPoints = vals.size();
   unsigned int maxPoints = (unsigned int)(fraction * nPoints);
@@ -34,15 +32,92 @@ void FindSmallestInterval(double& mean, double& meanErr, double& min, double& ma
     }
   }
   
+  TH1F* h_temp2 = new TH1F("h_temp2","",100,min-0.1*(max-min),max+0.1*(max-min));
+  h_temp2 -> Sumw2();
+  for(unsigned int point = minPoint; point <= maxPoint; ++point)
+    h_temp2 -> Fill( vals.at(point) );
   
-  TH1F* h_temp = new TH1F("h_temp","",100,lowEdge,higEdge);
+  mean = h_temp2 -> GetMean();
+  meanErr = h_temp2 -> GetMeanError();
+  
+  delete h_temp2;
+}
+
+
+
+void FindSmallestInterval(double& mean, double& meanErr, double& min, double& max,
+                          TH1F* histo,
+                          const double& fraction, const bool& verbosity)
+{
+  if( verbosity )
+    std::cout << ">>>>>> FindSmallestInterval" << std::endl;
+  
+  
+  double delta = 999999.;
+  double integralMax = fraction * histo->Integral();
+  
+  int N = histo -> GetNbinsX();
+  std::vector<float> binCenters(N);
+  std::vector<float> binContents(N);
+  std::vector<float> binIntegrals(N);
+  for(int bin1 = 0; bin1 < N; ++bin1)
+  {
+    if( verbosity ) std::cout << "trying bin " << bin1 << " / " << N << "\r" << std::flush; 
+    binCenters[bin1] = histo->GetBinCenter(bin1+1);
+    binContents[bin1] = histo->GetBinContent(bin1+1);
+    
+    for(int bin2 = 0; bin2 <= bin1; ++bin2)
+      binIntegrals[bin1] += binContents[bin2];
+  }
+  
+  for(int bin1 = 0; bin1 < N; ++bin1)
+  {
+    for(int bin2 = bin1+1; bin2 < N; ++bin2)
+    {
+      if( (binIntegrals[bin2]-binIntegrals[bin1]) < integralMax ) continue;
+      
+      double tmpMin = histo -> GetBinCenter(bin1);
+      double tmpMax = histo -> GetBinCenter(bin2);
+      if( tmpMax-tmpMin < delta )
+      {
+        delta = tmpMax - tmpMin;
+        min = tmpMin;
+        max = tmpMax;
+      }
+      
+      break;
+    }
+  }
+  
+  TH1F* h_temp2 = (TH1F*)( histo->Clone("h_temp2") );
+  h_temp2 -> Reset();
+  for(int bin = 0; bin < N; ++bin)
+    if( (binCenters[bin] >= min) && (binCenters[bin] <= max) )
+      h_temp2 -> SetBinContent(bin,binContents[bin]);
+  
+  mean = h_temp2 -> GetMean();
+  meanErr = h_temp2 -> GetMeanError();  
+  
+  delete h_temp2;
+}
+
+
+
+void FindSmallestInterval(double& mean, double& meanErr, double& min, double& max,
+                          const double& startMin, const double& startMax, const double& precision,
+                          std::vector<double>& vals, std::vector<double>& weights,
+                          const double& fraction, const bool& verbosity)
+{
+  if( verbosity )
+    std::cout << ">>>>>> FindSmallestInterval" << std::endl;
+  
+  
+  TH1F* h_temp = new TH1F("h_temp","",int((startMax-startMin)/precision),startMin,startMax);
   h_temp -> Sumw2();
+  for(unsigned int point = 0; point < vals.size(); ++point)
+    h_temp -> Fill(vals.at(point),weights.at(point));
   
-  for(unsigned int point = minPoint; point < maxPoint; ++point)
-    h_temp -> Fill( vals.at(point),weights.at(point) );
-  
-  mean    = h_temp -> GetMean();
-  meanErr = h_temp -> GetMeanError();
+  FindSmallestInterval(mean,meanErr,min,max,h_temp,fraction,verbosity);
   
   delete h_temp;
 }
@@ -58,18 +133,20 @@ void FindRecursiveMean(double& mean, double& meanErr,
     std::cout << ">>>>>> FindRecursiveMean" << std::endl;
   
   
-  std::sort(vals.begin(),vals.end());
-  double lowEdge = vals.at(0) - 0.01*(vals.at(vals.size()-1)-vals.at(0));
-  double higEdge = vals.at(vals.size()-1) + 0.01*(vals.at(vals.size()-1)-vals.at(0));
-  
-  TH1F* h_start = new TH1F("h_start","",100,lowEdge,higEdge);
-  h_start -> Sumw2();
+  double lowEdge = +999999999.;
+  double higEdge = -999999999.;
   for(unsigned int point = 0; point < vals.size(); ++point)
-    h_start -> Fill(vals.at(point),weights.at(point));
-  
+  {
+    if( vals.at(point) < lowEdge ) lowEdge = vals.at(point);
+    if( vals.at(point) > higEdge ) higEdge = vals.at(point);
+  }
+  double range = higEdge - lowEdge;
+  lowEdge -= 0.1 * range;
+  higEdge += 0.1 * range;
   
   int trial = 0;
-  double oldMean = h_start->GetMean();
+  mean = 1.;
+  double oldMean = 1.;
   double delta = 999999;
   
   while( delta > tolerance )
@@ -87,10 +164,12 @@ void FindRecursiveMean(double& mean, double& meanErr,
     
     mean    = h_temp -> GetMean();
     meanErr = h_temp -> GetMeanError();
+    
     delete h_temp;
     
     if( fabs(mean-oldMean) > tolerance )
     {
+      delta = fabs(mean-oldMean);
       oldMean = mean;
       ++trial;
     }
@@ -99,6 +178,7 @@ void FindRecursiveMean(double& mean, double& meanErr,
       return;
     }
   }
+  
 }
 
 
@@ -141,7 +221,7 @@ void FindGausFit(double& mean, double& meanErr,
   f_temp2 -> FixParameter(1,startingMean);
   f_temp2 -> SetParLimits(0,0.,1.);
   f_temp2 -> SetParLimits(2,0.,1.);
-  h_temp -> Fit(name.c_str(),"QNLR","");
+  h_temp -> Fit("f_temp2","QNLR","");
   
   mean    = f_temp2 -> GetParameter(1);
   meanErr = f_temp2 -> GetParameter(2);
@@ -170,9 +250,17 @@ void FindMean(double& mean, double& meanErr,
     std::cout << ">>>>>> FindMean" << std::endl;
   
   
-  std::sort(vals.begin(),vals.end());
-  double lowEdge = vals.at(0) - 0.01*(vals.at(vals.size()-1)-vals.at(0));
-  double higEdge = vals.at(vals.size()-1) + 0.01*(vals.at(vals.size()-1)-vals.at(0));
+  double lowEdge = +999999999.;
+  double higEdge = -999999999.;
+  for(unsigned int point = 0; point < vals.size(); ++point)
+  {
+    if( vals.at(point) < lowEdge ) lowEdge = vals.at(point);
+    if( vals.at(point) > higEdge ) higEdge = vals.at(point);
+  }
+  double range = higEdge - lowEdge;
+  lowEdge -= 0.1 * range;
+  higEdge += 0.1 * range;
+  
   
   TH1F* h_temp = new TH1F("h_temp","",100,lowEdge,higEdge);
   h_temp -> Sumw2();
@@ -196,6 +284,9 @@ void FindTemplateFit(double& scale, double& scaleErr,
 {
   if( verbosity )
     std::cout << ">>>>>> FindTemplateFit" << std::endl;
+  
+  
+  TVirtualFitter::SetDefaultFitter("Fumili2");
   
   
   float xNorm = h_DA->Integral() / h_MC->Integral() * h_DA->GetBinWidth(1) / h_MC->GetBinWidth(1);  
@@ -223,7 +314,7 @@ void FindTemplateFit(double& scale, double& scaleErr,
   int nTrials = 0;
   while( (fStatus != 0) && (nTrials < 10) )
   {
-    rp = h_DA -> Fit(funcName,"QERLS+");
+    rp = h_DA -> Fit(funcName,"QNERLS+");
     fStatus = rp;
     if( fStatus == 0 ) break;
     ++nTrials;

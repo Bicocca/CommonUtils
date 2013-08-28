@@ -46,7 +46,7 @@ LDFLAGS  =  -rdynamic -shared $(ARCHL)
 SONAME	 =  libEvent.so
 SOFLAGS  =  -Wl,-soname,$(SONAME)
 
-GLIBS   =  -lm -ldl -rdynamic $(ROOTGLIBS) -L$(ROOFITSYS)/lib
+GLIBS   =  -lm -ldl -rdynamic $(ROOTGLIBS) -L$(ROOFITSYS)/lib -lGenVector -lFoam -lMinuit -lRooFitCore -lRooFit -lMLP -lXMLIO -lTMVA -lTreePlayer
 
 
 #################################################
@@ -127,4 +127,4 @@ $(BIN)%$(BinSuf): $(PRG)%$(PrgSuf) $(HDRS) $(LIB)$(SONAME)
 
 
 clean:
-	rm -f $(OBJ)*$(ObjSuf) $(LIB)*$(LibSuf) $(OBJ)mydict*
+	rm -f $(BIN)*$(BinSuf) $(OBJ)*$(ObjSuf) $(LIB)*$(LibSuf) $(OBJ)mydict*
