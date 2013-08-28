@@ -1,3 +1,13 @@
+if [!(-d bin/)]; then
+mkdir lib
+fi
+if [!(-d lib/)]; then
+mkdir lib
+fi
+if [!(-d obj/)] then
+mkdir lib
+fi
+
 if [ -n "${COMMONUTILS}" ]; then
 echo "already set"
 else
