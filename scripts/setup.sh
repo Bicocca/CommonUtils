@@ -1,11 +1,19 @@
-if [!(-d bin/)]; then
+if [ ! -d bin/ ]; then
 mkdir bin
+else
+echo "bin/ already exists"
 fi
-if [!(-d lib/)]; then
+
+if [ ! -d lib/ ]; then
 mkdir lib
+else
+echo "lib/ already exists"
 fi
-if [!(-d obj/)] then
+
+if [ ! -d obj/ ]; then
 mkdir obj
+else
+echo "obj/ already exists"
 fi
 
 if [ -n "${COMMONUTILS}" ]; then
