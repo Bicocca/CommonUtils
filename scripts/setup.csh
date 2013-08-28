@@ -1,11 +1,11 @@
 if (!(-d bin/)) then
-mkdir lib
+mkdir bin
 endif
 if (!(-d lib/)) then
 mkdir lib
 endif
 if (!(-d obj/)) then
-mkdir lib
+mkdir obj
 endif
 
 if (${?COMMONUTILS}) then
