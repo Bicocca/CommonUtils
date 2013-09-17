@@ -5,6 +5,25 @@
 //------------------------
 // Hgg analysis categories
 
+int GetSingleCategory(const float& scEta1, const float& R91)
+{
+  if( fabs(scEta1) < 1.4442 )
+  {
+    if( R91 > 0.94 ) return 0;
+    if( R91 < 0.94 ) return 1;
+  }
+  
+  if( fabs(scEta1) > 1.5600 )
+  {
+    if( R91 > 0.94 ) return 2;
+    if( R91 < 0.94 ) return 3;
+  }
+  
+  return -1;
+}
+
+
+
 int GetStraightCategory(const float& scEta1, const float& R91, const float& scEta2, const float& R92)
 {
   if( (fabs(scEta1) < 1.4442) && (fabs(scEta2) < 1.4442) )
