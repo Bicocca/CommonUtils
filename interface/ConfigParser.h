@@ -65,8 +65,10 @@ class ConfigParser {
   std::vector<int> readIntListOption(const char *name) const throw(const char *);
 
   // Read Double List Option
-  std::vector<double> readDoubleListOption(const char *name) 
-    const throw(const char *);
+  std::vector<double> readDoubleListOption(const char *name) const throw(const char *);
+
+  // Read Float List Option
+  std::vector<float> readFloatListOption(const char *name) const throw(const char *);
   
   // Read String List Option
   std::vector<std::string> readStringListOption(const char *name)
