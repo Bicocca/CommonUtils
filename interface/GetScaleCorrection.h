@@ -17,6 +17,7 @@ class ScaleCorrector
   ScaleCorrector(const std::string& runRangeFileName)
   {
     ShervinRunDepScaleMap = NULL;
+    ShervinRunDepScaleMap_Err = NULL;
     IJazZGlobalScaleHisto = NULL;
     IJazZRunDepScaleHistoMap = NULL;
     
@@ -27,6 +28,7 @@ class ScaleCorrector
   ~ScaleCorrector()
   {
     delete ShervinRunDepScaleMap;
+    delete ShervinRunDepScaleMap_Err;
     delete IJazZGlobalScaleHisto;
     delete IJazZRunDepScaleHistoMap;  
   }
@@ -39,7 +41,8 @@ class ScaleCorrector
   void SetIJazZRunDepScaleHistoMap(const std::string& directory,
                                    const std::string& fileName = "IJazZ_EE_Data_EscaleHgg-runDependent-eleRegr-coarse.root.fittedResp.etaScaleDataOverMC");
   
-  float GetScaleCorrection(const float& scEta, const float& R9, const int& runId, const std::string& label, const std::string& version);
+  float GetScaleCorrection(const float& scEta, const float& R9, const int& runId, 
+			   const std::string& label, const std::string& version, const float& timesError);
   
   
  private:
@@ -47,6 +50,7 @@ class ScaleCorrector
   std::map<std::string,std::pair<int,int> > runRangeMap;
   
   std::map<std::pair<std::string,std::pair<int,int> >,float>* ShervinRunDepScaleMap;
+  std::map<std::pair<std::string,std::pair<int,int> >,float>* ShervinRunDepScaleMap_Err;
   TH2F* IJazZGlobalScaleHisto;
   std::map<std::string,TH2F*>* IJazZRunDepScaleHistoMap;
 };
@@ -75,7 +79,8 @@ void ScaleCorrector::SetRunRangeMap(const std::string& inFileName)
 
 
 
-float ScaleCorrector::GetScaleCorrection(const float& scEta, const float& R9, const int& runId, const std::string& label, const std::string& version)
+float ScaleCorrector::GetScaleCorrection(const float& scEta, const float& R9, const int& runId, 
+					 const std::string& label, const std::string& version, const float& timesError)
 {
   //read run range map
   std::string runRange = "";
@@ -134,7 +139,7 @@ float ScaleCorrector::GetScaleCorrection(const float& scEta, const float& R9, co
     std::pair<int,int> dummy1(runMin,runMax);
     std::pair<std::string,std::pair<int,int> > dummy2(label,dummy1);
     
-    return (*ShervinRunDepScaleMap)[dummy2];
+    return ((*ShervinRunDepScaleMap)[dummy2] + timesError * (*ShervinRunDepScaleMap_Err)[dummy2]);
   }
   
   
@@ -178,6 +183,7 @@ void ScaleCorrector::SetShervinRunDepScaleMap(const std::string& fileName)
   std::cout << ">>>>>> ScaleCorrector::SetShervinRunDepScaleMap begin" << std::endl;
   
   std::map<std::pair<std::string,std::pair<int,int> >,float>* MapOfScales = new std::map<std::pair<std::string,std::pair<int,int> >,float>;
+  std::map<std::pair<std::string,std::pair<int,int> >,float>* MapOfScales_Err = new std::map<std::pair<std::string,std::pair<int,int> >,float>;
   
   //fill the map with file data
   std::string evtType;
@@ -196,10 +202,12 @@ void ScaleCorrector::SetShervinRunDepScaleMap(const std::string& fileName)
      std::pair<int,int> range(runMin,runMax);
      std::pair<std::string,std::pair <int,int> > typeRange(evtType,range);
      (*MapOfScales)[typeRange] = scale;
+     (*MapOfScales_Err)[typeRange] = errScale;
   }
   inFile.close();
   
   ShervinRunDepScaleMap = MapOfScales;
+  ShervinRunDepScaleMap_Err = MapOfScales_Err;
   
   std::cout << ">>>>>> ScaleCorrector::SetShervinRunDepScaleMap end" << std::endl;
 }
