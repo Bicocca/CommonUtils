@@ -18,6 +18,7 @@ class Smearer
   Smearer()
   {
     ShervinExtraSmearingMap = NULL;
+    ShervinExtraSmearingMap_Err = NULL;
     IJazZExtraSmearingHisto = NULL;
   }
   
@@ -25,6 +26,7 @@ class Smearer
   ~Smearer()
   {
     delete ShervinExtraSmearingMap;
+    delete ShervinExtraSmearingMap_Err;
     delete IJazZExtraSmearingHisto;
   }
   
@@ -32,18 +34,19 @@ class Smearer
   void SetShervinExtraSmearingMap(const std::string& fileName);
   void SetIJazZExtraSmearingHisto(const std::string& directory);
   
-  float GetExtraSmearing(const float& scEta, const float& R9, const std::string& label, const std::string& version);
+  float GetExtraSmearing(const float& scEta, const float& R9, const std::string& label, const std::string& version, const float& timesError);
 
 
  private:
 
   std::map<std::string,float>* ShervinExtraSmearingMap;
+  std::map<std::string,float>* ShervinExtraSmearingMap_Err;
   TH2F* IJazZExtraSmearingHisto;
 };
 
 
 
-float Smearer::GetExtraSmearing(const float& scEta, const float& R9, const std::string& label, const std::string& version)
+float Smearer::GetExtraSmearing(const float& scEta, const float& R9, const std::string& label, const std::string& version, const float& timesError)
 { 
   //2011  // from AN2011-426
   if( label == "2011" )
@@ -116,7 +119,11 @@ float Smearer::GetExtraSmearing(const float& scEta, const float& R9, const std::
     if( (fabs(scEta) >= 2.0000) && (fabs(scEta) < 2.5000) && (R9 >= 0.94) ) label = "EEhighEtaGold";
     
     // get value
-    return (*ShervinExtraSmearingMap)[label];
+/*     std::cout << " >>> timesError = " << timesError << std::endl; */
+/*     std::cout << " >>> (*ShervinExtraSmearingMap)[label] = " << (*ShervinExtraSmearingMap)[label] << std::endl; */
+/*     std::cout << " >>> (*ShervinExtraSmearingMap_Err)[label] = " << (*ShervinExtraSmearingMap_Err)[label] << std::endl; */
+
+    return ((*ShervinExtraSmearingMap)[label] + timesError * (*ShervinExtraSmearingMap_Err)[label]);
   }
   
   
@@ -147,6 +154,7 @@ void Smearer::SetShervinExtraSmearingMap(const std::string& fileName)
   std::cout << ">>>>>> Smearer::SetShervinExtraSmearingMap begin" << std::endl;
   
   std::map<std::string,float>* MapOfSmearings = new std::map<std::string,float>;
+  std::map<std::string,float>* MapOfSmearings_Err = new std::map<std::string,float>;
 
   //fill the map with file data
   std::string evtType;
@@ -160,10 +168,12 @@ void Smearer::SetShervinExtraSmearingMap(const std::string& fileName)
     if( !inFile.good() ) break;
     
     (*MapOfSmearings)[evtType] = smear;
+    (*MapOfSmearings_Err)[evtType] = errSmear;
   }
   inFile.close();
   
   ShervinExtraSmearingMap = MapOfSmearings;
+  ShervinExtraSmearingMap_Err = MapOfSmearings_Err;
   
   std::cout << ">>>>>> Smearer::SetShervinExtraSmearingMap end" << std::endl;
 }
