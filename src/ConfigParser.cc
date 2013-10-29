@@ -295,6 +295,34 @@ vector<double> ConfigParser::readDoubleListOption(const char *name) const
 }
 
 
+//! Read float list option
+vector<float> ConfigParser::readFloatListOption(const char *name) const
+  throw(const char *){
+
+  string s(name);
+  LineIterator I=configLines.begin();
+
+  while (I != configLines.end()) {
+    if((*I)->isOption(s)){
+      list<string> values=(*I)->getValues();
+      list<string>::const_iterator I2=values.begin();      
+      vector<float> v(values.size());
+      int i=0;
+      while(I2!=values.end()){
+	v[i]=atof((*I2).c_str());
+	i++; I2++;
+      }
+
+      return v;
+    }
+    I++;
+  }
+  std::cerr << "ConfigParser::readFloatListOption: No \"" 
+            << name << "\" option provided!\n" ;
+  throw "ConfigParser::readFloatListOption: No such option provided!";
+}
+
+
 //! Read string list option
 vector<string> ConfigParser::readStringListOption(const char *name) const
   throw(const char *){
