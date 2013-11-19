@@ -126,7 +126,7 @@ void FindSmallestInterval(double& mean, double& meanErr, double& min, double& ma
 
 void FindRecursiveMean(double& mean, double& meanErr,
                        std::vector<double>& vals, std::vector<double>& weights,
-                       const double& window, const double& tolerance,
+                       const double& window, const double& tolerance, const double& startMean,
                        const bool& verbosity)
 {
   if( verbosity )
@@ -145,7 +145,9 @@ void FindRecursiveMean(double& mean, double& meanErr,
   higEdge += 0.1 * range;
   
   int trial = 0;
-  mean = 1.;
+
+  if(startMean != -1) mean = startMean;
+  else  mean = 1.;
   double oldMean = 1.;
   double delta = 999999;
   
@@ -175,6 +177,7 @@ void FindRecursiveMean(double& mean, double& meanErr,
     }
     else
     {
+      std::cout << " >>> fabs(mean-oldMean) = " << fabs(mean-oldMean) << std::endl;
       return;
     }
   }
