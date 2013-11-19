@@ -30,7 +30,7 @@ void FindSmallestInterval(double& mean, double& meanErr, double& min, double& ma
 
 void FindRecursiveMean(double& mean, double& meanErr,
                        std::vector<double>& vals, std::vector<double>& weights,
-                       const double& window, const double& tolerance,
+                       const double& window, const double& tolerance, const double& startMean,
                        const bool& verbosity = false);
 
 void FindGausFit(double& mean, double& meanErr,
