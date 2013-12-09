@@ -45,7 +45,11 @@ void FindMean(double& mean, double& meanErr,
               const bool& verbosity = false);
 
 void FindTemplateFit(double& scale, double& scaleErr,
-                     TH1F* h_MC, TH1F* h_DA,
+                     TH1F* h_MC, TH1F* h_DA, TF1** f_template, 
+                     const bool& verbosity = false);
+
+void FindTemplateFit(double& scale, double& scaleErr,
+                     TH1F* h_MC, TH1F* h_DA, 
                      const bool& verbosity = false);
 
 #endif
