@@ -20,11 +20,14 @@ class ScaleCorrector
     ShervinRunDepScaleMap_Err = NULL;
     ShervinEtDepScaleMap = NULL;
     ShervinEtDepScaleMap_Err = NULL;
+    ShervinEtResidualDepScaleMap = NULL;
+    ShervinEtResidualDepScaleMap_Err = NULL;
     IJazZGlobalScaleHisto = NULL;
     IJazZRunDepScaleHistoMap = NULL;
     
     if(type == "RunScale")    SetRunRangeMap(runRangeFileName);
-    if(type == "EtScale")    SetEtRangeMap(runRangeFileName);
+    if(type == "EtScale")     SetEtRangeMap(runRangeFileName);
+    if(type == "EtResidualScale")   SetEtResidualRangeMap(runRangeFileName);
   }
   
   //! dtor
@@ -34,6 +37,8 @@ class ScaleCorrector
     delete ShervinRunDepScaleMap_Err;
     delete ShervinEtDepScaleMap;
     delete ShervinEtDepScaleMap_Err;
+    delete ShervinEtResidualDepScaleMap;
+    delete ShervinEtResidualDepScaleMap_Err;
     delete IJazZGlobalScaleHisto;
     delete IJazZRunDepScaleHistoMap;  
   }
@@ -41,9 +46,11 @@ class ScaleCorrector
   //! methods
   void SetRunRangeMap(const std::string& inFileName);
   void SetEtRangeMap(const std::string& inFileName);
+  void SetEtResidualRangeMap(const std::string& inFileName);
   
   void SetShervinRunDepScaleMap(const std::string& fileName);
   void SetShervinEtDepScaleMap(const std::string& fileName);
+  void SetShervinEtResidualDepScaleMap(const std::string& fileName);
   void SetIJazZGlobalScaleHisto(const std::string& directory);
   void SetIJazZRunDepScaleHistoMap(const std::string& directory,
                                    const std::string& fileName = "IJazZ_EE_Data_EscaleHgg-runDependent-eleRegr-coarse.root.fittedResp.etaScaleDataOverMC");
@@ -53,17 +60,23 @@ class ScaleCorrector
  
   float GetEtScaleCorrection(const float& scEta, const float& R9, const float& Et, 
 			     const std::string& label, const std::string& version, const float& timesError);
+
+  float GetEtResidualScaleCorrection(const float& scEta, const float& R9, 
+				     const std::string& label, const std::string& version, const float& timesError);
  
   
  private:
   
   std::map<std::string,std::pair<int,int> > runRangeMap;
   std::map<std::string,std::pair<float,float> > EtRangeMap;
+  std::map<std::string,std::pair<float,float> > EtResidualRangeMap;
   
   std::map<std::pair<std::string,std::pair<int,int> >,float>* ShervinRunDepScaleMap;
   std::map<std::pair<std::string,std::pair<int,int> >,float>* ShervinRunDepScaleMap_Err;
   std::map<std::pair<std::string,std::pair<float,float> >,float>* ShervinEtDepScaleMap;
   std::map<std::pair<std::string,std::pair<float,float> >,float>* ShervinEtDepScaleMap_Err;
+  std::map<std::string,float>* ShervinEtResidualDepScaleMap;
+  std::map<std::string,float>* ShervinEtResidualDepScaleMap_Err;
   TH2F* IJazZGlobalScaleHisto;
   std::map<std::string,TH2F*>* IJazZRunDepScaleHistoMap;
 };
@@ -107,6 +120,23 @@ void ScaleCorrector::SetEtRangeMap(const std::string& inFileName)
 /*      std::cout << " =>> atof(buffer2.c_str()) " << atof(buffer2.c_str()) << std::endl; */
     std::pair<float,float> dummy (atof(buffer1.c_str()),atof(buffer2.c_str()));
     EtRangeMap[runRange] = dummy;
+  }  
+  
+  inFile.close();
+}
+
+
+void ScaleCorrector::SetEtResidualRangeMap(const std::string& inFileName)
+{
+  std::ifstream inFile(inFileName.c_str(),std::ios::in);
+  while(1)
+  {
+    std::string runRange, buffer1, buffer2;
+    inFile >> runRange >> buffer1 >> buffer2;
+    if( !inFile.good() ) break;
+    
+    std::pair<float,float> dummy (atof(buffer1.c_str()),atof(buffer2.c_str()));
+    EtResidualRangeMap[runRange] = dummy;
   }  
   
   inFile.close();
@@ -288,6 +318,33 @@ float ScaleCorrector::GetEtScaleCorrection(const float& scEta, const float& R9, 
   return 1.;
 };
 
+/////////////////
+float ScaleCorrector::GetEtResidualScaleCorrection(const float& scEta, const float& R9, 
+						   const std::string& label, const std::string& version, const float& timesError)
+{
+  if( version == "shervin" && ShervinEtResidualDepScaleMap == NULL )
+    std::cout << ">>>>>> ScaleCorrector::ERROR: ShervinEtDepScaleMap not defined, returning 1. as correction" << std::endl;
+  if( version == "shervin" && ShervinEtResidualDepScaleMap != NULL )
+  {
+    // find eta/R9 bin
+    std::string label = "";
+    if( (fabs(scEta) >= 0.0000) && (fabs(scEta) < 1.0000) && (R9  < 0.94) ) label = "absEta_0_1-bad";
+    if( (fabs(scEta) >= 0.0000) && (fabs(scEta) < 1.0000) && (R9 >= 0.94) ) label = "absEta_0_1-gold";
+    if( (fabs(scEta) >= 1.0000) && (fabs(scEta) < 1.4442) && (R9  < 0.94) ) label = "absEta_1_1.4442-bad";
+    if( (fabs(scEta) >= 1.0000) && (fabs(scEta) < 1.4442) && (R9 >= 0.94) ) label = "absEta_1_1.4442-gold";
+    
+    //    std::cout << "labelFound = " << label << " Et = " << Et << " fabs(scEta) = " << fabs(scEta) << " R9 = " << R9 << std::endl;
+
+    if( (fabs(scEta) >= 1.5660) ) return 1.;
+
+    // get value   
+    return ((*ShervinEtResidualDepScaleMap)[label] + timesError * (*ShervinEtResidualDepScaleMap_Err)[label]);
+  }
+ 
+  return 1.;
+};
+
+/////////////////
 
 
 void ScaleCorrector::SetShervinRunDepScaleMap(const std::string& fileName)
@@ -361,6 +418,40 @@ void ScaleCorrector::SetShervinEtDepScaleMap(const std::string& fileName)
   std::cout << ">>>>>> ScaleCorrector::SetShervinEtDepScaleMap end" << std::endl;
 }
 
+
+///////////////////////////
+void ScaleCorrector::SetShervinEtResidualDepScaleMap(const std::string& fileName)
+{
+  std::cout << ">>>>>> ScaleCorrector::SetShervinEtResidualDepScaleMap begin" << std::endl;
+  
+  std::map<std::string,float>* MapOfScales = new std::map<std::string,float>;
+  std::map<std::string,float>* MapOfScales_Err = new std::map<std::string,float>;
+  
+  //fill the map with file data
+  std::string evtType;
+  float scale;
+  float errScale;
+
+  std::ifstream inFile(fileName.c_str(),std::ios::in);
+  while(1)
+  {
+     inFile >> evtType >> scale >> errScale;
+     if( !inFile.good() ) break;
+
+     //     std::cout << " =>> scale = " << scale << " errScale = " << errScale << std::endl;
+     
+     (*MapOfScales)[evtType] = scale;
+     (*MapOfScales_Err)[evtType] = errScale;
+  }
+  inFile.close();
+  
+  ShervinEtResidualDepScaleMap = MapOfScales;
+  ShervinEtResidualDepScaleMap_Err = MapOfScales_Err;
+  
+  std::cout << ">>>>>> ScaleCorrector::SetShervinEtResidualDepScaleMap end" << std::endl;
+}
+
+///////////////////////////
 
 
 void ScaleCorrector::SetIJazZGlobalScaleHisto(const std::string& directory)
