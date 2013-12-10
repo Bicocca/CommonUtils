@@ -236,6 +236,7 @@ std::map<std::string,TH1F*>* ReadPUWeights(const std::string& MCGen, const bool&
   
   
   std::string fileBaseName = "";
+  if( MCGen == "7TeV" ) fileBaseName = "PUWeights_DYToEE_M20_powheg-Summer11-START53_Run2011AB";
   if( MCGen == "madgraph" ) fileBaseName = "PUWeights_DYJets-Summer12-START53-ZSkim";
   if( MCGen == "powheg" )   fileBaseName = "PUWeights_DYToEE_M20_powheg-Summer12-START53-ZSkim";
   
